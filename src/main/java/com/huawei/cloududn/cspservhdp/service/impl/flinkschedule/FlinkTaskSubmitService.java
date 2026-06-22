@@ -34,7 +34,7 @@ public class FlinkTaskSubmitService {
      */
     public boolean submitTask(String applicationName) {
         String taskPath = FlinkScheduleConstants.HDFS_FLINK_ROOT + "/" + applicationName + "/";
-        List<String> command = buildSubmitCommand(applicationName, taskPath);
+        List<String> command = buildSubmitCommand(taskPath);
         LOGGER.info("Submitting Flink task {}, command={}", applicationName, command);
         int exitCode = executeCommand(command);
         if (exitCode == 0) {
@@ -48,11 +48,10 @@ public class FlinkTaskSubmitService {
     /**
      * 拼装 flink run-application 提交命令。
      *
-     * @param applicationName 应用名称
-     * @param taskPath        HDFS 任务路径
+     * @param taskPath HDFS 任务路径
      * @return 命令参数列表
      */
-    List<String> buildSubmitCommand(String applicationName, String taskPath) {
+    List<String> buildSubmitCommand(String taskPath) {
         List<String> command = new ArrayList<>();
         command.add(flinkBin);
         command.add("run-application");
@@ -62,6 +61,8 @@ public class FlinkTaskSubmitService {
         command.add(FlinkScheduleConstants.FLINK_MAIN_CLASS);
         command.add("-Dyarn.ship-files=" + FlinkScheduleConstants.FLINK_YARN_SHIP_FILES);
         command.add("-Denv.java.opts=" + FlinkScheduleConstants.FLINK_ENV_JAVA_OPTS);
+        command.add("-Dsecurity.kerberos.login.contexts="
+                + FlinkScheduleConstants.FLINK_KERBEROS_LOGIN_CONTEXTS);
         command.add(FlinkScheduleConstants.FLINK_JAR_PATH);
         command.add("--task-path");
         command.add(taskPath);

@@ -28,13 +28,15 @@ public final class FlinkScheduleConstants {
 
     /** YARN 分发到容器的依赖文件列表，分号分隔。 */
     public static final String FLINK_YARN_SHIP_FILES =
-            "/opt/cloududn/App/DAYUClient/Keytab/paas.keytab;"
-                    + "/opt/cloududn/App/DAYUClient/Client/Kafka/config/kdc.conf;"
+            "/opt/cloududn/App/DAYUClient/Client/Kafka/config/kdc.conf;"
                     + "/opt/container/envinfo/cert/internal/trust.cer;"
                     + "/opt/cloududn/App/DAYUClient/Client/Flink/config/yarn-site.xml";
 
     /** Flink 容器 JVM 启动参数。 */
     public static final String FLINK_ENV_JAVA_OPTS = "-Djava.security.krb5.conf=kdc.conf";
+
+    /** Kerberos 登录上下文。 */
+    public static final String FLINK_KERBEROS_LOGIN_CONTEXTS = "Client,KafkaClient";
 
     /**
      * YARN 上视为“正在拉起或运行中”的状态集合。
