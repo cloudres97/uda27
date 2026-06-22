@@ -18,7 +18,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>
  * 核心职责：
  * <ol>
- *   <li>定时将本地 {@code /opt/cloududn/App/meta/flink} 元数据同步到 HDFS</li>
+ *   <li>定时将本地 {@code modelPath/model/compute/FlinkSQLJob/} 元数据同步到 HDFS</li>
  *   <li>Bean 加载时探测 HDFS，扫描 HDFS 上各 application 目录并检查 YARN 任务状态</li>
  *   <li>对非运行中的 Flink 任务执行 flink run-application 提交</li>
  *   <li>周期性巡检所有 Flink 任务，异常退出时自动拉起</li>

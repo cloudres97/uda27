@@ -9,8 +9,13 @@ import java.util.EnumSet;
  */
 public final class FlinkScheduleConstants {
 
+    /** 模型根路径，由外部输入；当前先在常量中配置默认值。 */
+    public static final String MODEL_PATH = "/opt/cloududn/App/";
+
+    private static final String LOCAL_META_RELATIVE_PATH = "model/compute/FlinkSQLJob/";
+
     /** 本地 Flink 任务元数据根目录，每个子目录对应一个 applicationName。 */
-    public static final String LOCAL_META_DIR = "/opt/cloududn/App/meta/flink";
+    public static final String LOCAL_META_DIR = resolveLocalMetaDir(MODEL_PATH);
 
     /** HDFS 上 Flink 插件任务元数据根目录。 */
     public static final String HDFS_FLINK_ROOT = "hdfs://hacluster/uda/plugin/flink";
@@ -33,5 +38,22 @@ public final class FlinkScheduleConstants {
             YarnApplicationState.RUNNING);
 
     private FlinkScheduleConstants() {
+    }
+
+    /**
+     * 根据 modelPath 解析本地 Flink 元数据根目录。
+     *
+     * @param modelPath 模型根路径
+     * @return modelPath + model/compute/FlinkSQLJob/
+     */
+    public static String resolveLocalMetaDir(String modelPath) {
+        return normalizeModelPath(modelPath) + LOCAL_META_RELATIVE_PATH;
+    }
+
+    private static String normalizeModelPath(String modelPath) {
+        if (modelPath == null || modelPath.isEmpty()) {
+            return "";
+        }
+        return modelPath.endsWith("/") ? modelPath : modelPath + "/";
     }
 }
