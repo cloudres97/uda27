@@ -58,10 +58,10 @@ public class FlinkTaskSubmitService {
         command.add("run-application");
         command.add("-t");
         command.add("yarn-application");
-        // 与 HDFS 子目录名保持一致，便于 YARN 按名称查询
-        command.add("-Dyarn.application.name=" + applicationName);
         command.add("-c");
         command.add(FlinkScheduleConstants.FLINK_MAIN_CLASS);
+        command.add("-Dyarn.ship-files=" + FlinkScheduleConstants.FLINK_YARN_SHIP_FILES);
+        command.add("-Denv.java.opts=" + FlinkScheduleConstants.FLINK_ENV_JAVA_OPTS);
         command.add(FlinkScheduleConstants.FLINK_JAR_PATH);
         command.add("--task-path");
         command.add(taskPath);

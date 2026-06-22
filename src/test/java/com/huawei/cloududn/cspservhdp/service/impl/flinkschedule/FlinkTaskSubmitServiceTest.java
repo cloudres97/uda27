@@ -32,12 +32,13 @@ public class FlinkTaskSubmitServiceTest {
         assertEquals("run-application", command.get(1));
         assertEquals("-t", command.get(2));
         assertEquals("yarn-application", command.get(3));
-        assertEquals("-Dyarn.application.name=order-sync", command.get(4));
-        assertEquals("-c", command.get(5));
-        assertEquals(FlinkScheduleConstants.FLINK_MAIN_CLASS, command.get(6));
-        assertEquals(FlinkScheduleConstants.FLINK_JAR_PATH, command.get(7));
-        assertEquals("--task-path", command.get(8));
-        assertEquals("hdfs://hacluster/uda/plugin/flink/order-sync/", command.get(9));
+        assertEquals("-c", command.get(4));
+        assertEquals(FlinkScheduleConstants.FLINK_MAIN_CLASS, command.get(5));
+        assertEquals("-Dyarn.ship-files=" + FlinkScheduleConstants.FLINK_YARN_SHIP_FILES, command.get(6));
+        assertEquals("-Denv.java.opts=" + FlinkScheduleConstants.FLINK_ENV_JAVA_OPTS, command.get(7));
+        assertEquals(FlinkScheduleConstants.FLINK_JAR_PATH, command.get(8));
+        assertEquals("--task-path", command.get(9));
+        assertEquals("hdfs://hacluster/uda/plugin/flink/order-sync/", command.get(10));
     }
 
     @Test
@@ -46,7 +47,6 @@ public class FlinkTaskSubmitServiceTest {
                 "user-event",
                 "hdfs://hacluster/uda/plugin/flink/user-event/");
 
-        assertTrue(command.contains("-Dyarn.application.name=user-event"));
         assertTrue(command.contains("hdfs://hacluster/uda/plugin/flink/user-event/"));
     }
 
