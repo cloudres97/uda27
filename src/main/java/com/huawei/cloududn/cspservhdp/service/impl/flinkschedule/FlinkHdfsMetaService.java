@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Component
 public class FlinkHdfsMetaService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FlinkHdfsMetaService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlinkHdfsMetaService.class);
 
     private final Configuration hadoopConf = new Configuration();
 
@@ -35,13 +35,13 @@ public class FlinkHdfsMetaService {
      * @return true 表示 FileSystem 可正常连接
      */
     public boolean probeConnection() {
-        LOG.info("Start probing HDFS connection, root={}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
+        LOGGER.info("Start probing HDFS connection, root={}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
         try (FileSystem fileSystem = createFileSystem()) {
             boolean exists = fileSystem.exists(new Path(FlinkScheduleConstants.HDFS_FLINK_ROOT));
-            LOG.info("HDFS probe success, root exists={}", exists);
+            LOGGER.info("HDFS probe success, root exists={}", exists);
             return true;
         } catch (IOException ex) {
-            LOG.error("HDFS probe failed, root={}", FlinkScheduleConstants.HDFS_FLINK_ROOT, ex);
+            LOGGER.error("HDFS probe failed, root={}", FlinkScheduleConstants.HDFS_FLINK_ROOT, ex);
             return false;
         }
     }
@@ -52,11 +52,11 @@ public class FlinkHdfsMetaService {
      * @return applicationName 列表；失败时返回空列表
      */
     public List<String> listApplicationNames() {
-        LOG.debug("Listing application names from HDFS root={}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
+        LOGGER.debug("Listing application names from HDFS root={}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
         try (FileSystem fileSystem = createFileSystem()) {
             Path rootPath = new Path(FlinkScheduleConstants.HDFS_FLINK_ROOT);
             if (!fileSystem.exists(rootPath)) {
-                LOG.warn("HDFS root path does not exist: {}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
+                LOGGER.warn("HDFS root path does not exist: {}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
                 return Collections.emptyList();
             }
             FileStatus[] statuses = fileSystem.listStatus(rootPath);
@@ -64,10 +64,10 @@ public class FlinkHdfsMetaService {
                     .filter(FileStatus::isDirectory)
                     .map(status -> status.getPath().getName())
                     .collect(Collectors.toList());
-            LOG.info("Found {} application(s) on HDFS: {}", names.size(), names);
+            LOGGER.info("Found {} application(s) on HDFS: {}", names.size(), names);
             return names;
         } catch (IOException ex) {
-            LOG.error("Failed to list applications from HDFS", ex);
+            LOGGER.error("Failed to list applications from HDFS", ex);
             return Collections.emptyList();
         }
     }
@@ -76,23 +76,23 @@ public class FlinkHdfsMetaService {
      * 将本地 meta 根目录下所有 application 子目录同步到 HDFS。
      */
     public void uploadAllLocalMeta() {
-        LOG.info("Start uploading local meta from {}", FlinkScheduleConstants.LOCAL_META_DIR);
+        LOGGER.info("Start uploading local meta from {}", FlinkScheduleConstants.LOCAL_META_DIR);
         File localRoot = new File(FlinkScheduleConstants.LOCAL_META_DIR);
         if (!localRoot.isDirectory()) {
-            LOG.warn("Local meta directory not found or not a directory: {}",
+            LOGGER.warn("Local meta directory not found or not a directory: {}",
                     FlinkScheduleConstants.LOCAL_META_DIR);
             return;
         }
         File[] applicationDirs = localRoot.listFiles(File::isDirectory);
         if (applicationDirs == null || applicationDirs.length == 0) {
-            LOG.info("No application meta subdirectory under {}", FlinkScheduleConstants.LOCAL_META_DIR);
+            LOGGER.info("No application meta subdirectory under {}", FlinkScheduleConstants.LOCAL_META_DIR);
             return;
         }
-        LOG.info("Found {} local application meta director(ies) to upload", applicationDirs.length);
+        LOGGER.info("Found {} local application meta director(ies) to upload", applicationDirs.length);
         for (File applicationDir : applicationDirs) {
             uploadApplicationMeta(applicationDir);
         }
-        LOG.info("Local meta upload finished");
+        LOGGER.info("Local meta upload finished");
     }
 
     /**
@@ -103,17 +103,17 @@ public class FlinkHdfsMetaService {
     public void uploadApplicationMeta(File applicationDir) {
         String applicationName = applicationDir.getName();
         Path hdfsAppPath = new Path(FlinkScheduleConstants.HDFS_FLINK_ROOT, applicationName);
-        LOG.info("Uploading meta for application={}, local={}, hdfs={}",
+        LOGGER.info("Uploading meta for application={}, local={}, hdfs={}",
                 applicationName, applicationDir.getAbsolutePath(), hdfsAppPath);
         try (FileSystem fileSystem = createFileSystem()) {
             if (!fileSystem.exists(hdfsAppPath)) {
                 fileSystem.mkdirs(hdfsAppPath);
-                LOG.debug("Created HDFS directory: {}", hdfsAppPath);
+                LOGGER.debug("Created HDFS directory: {}", hdfsAppPath);
             }
             int fileCount = uploadFilesRecursively(fileSystem, applicationDir, hdfsAppPath);
-            LOG.info("Uploaded {} file(s) for application {} to {}", fileCount, applicationName, hdfsAppPath);
+            LOGGER.info("Uploaded {} file(s) for application {} to {}", fileCount, applicationName, hdfsAppPath);
         } catch (IOException ex) {
-            LOG.error("Failed to upload meta for application {}", applicationName, ex);
+            LOGGER.error("Failed to upload meta for application {}", applicationName, ex);
         }
     }
 
@@ -138,7 +138,7 @@ public class FlinkHdfsMetaService {
                 uploadedCount += uploadFilesRecursively(fileSystem, child, targetPath);
                 continue;
             }
-            LOG.debug("Copying local file {} to HDFS {}", child.getAbsolutePath(), targetPath);
+            LOGGER.debug("Copying local file {} to HDFS {}", child.getAbsolutePath(), targetPath);
             fileSystem.copyFromLocalFile(false, true, new Path(child.getAbsolutePath()), targetPath);
             uploadedCount++;
         }

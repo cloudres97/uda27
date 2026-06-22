@@ -19,7 +19,7 @@ import java.util.List;
 @Component
 public class FlinkYarnTaskService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FlinkYarnTaskService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlinkYarnTaskService.class);
 
     private final Configuration hadoopConf = new Configuration();
 
@@ -32,25 +32,25 @@ public class FlinkYarnTaskService {
      * @return true 表示任务正在拉起或运行中
      */
     public boolean isTaskActive(String applicationName) {
-        LOG.debug("Querying YARN status for application={}", applicationName);
+        LOGGER.debug("Querying YARN status for application={}", applicationName);
         initYarnClient();
         try {
             List<ApplicationReport> reports = yarnClient.getApplications(
                     FlinkScheduleConstants.ACTIVE_YARN_STATES);
-            LOG.debug("Fetched {} active application(s) from YARN", reports.size());
+            LOGGER.debug("Fetched {} active application(s) from YARN", reports.size());
             for (ApplicationReport report : reports) {
                 if (applicationName.equals(report.getName())) {
-                    LOG.info("Application {} is active on YARN, state={}, appId={}",
+                    LOGGER.info("Application {} is active on YARN, state={}, appId={}",
                             applicationName,
                             report.getYarnApplicationState(),
                             report.getApplicationId());
                     return true;
                 }
             }
-            LOG.info("Application {} is not active on YARN", applicationName);
+            LOGGER.info("Application {} is not active on YARN", applicationName);
             return false;
         } catch (Exception ex) {
-            LOG.error("Failed to query YARN status for application {}", applicationName, ex);
+            LOGGER.error("Failed to query YARN status for application {}", applicationName, ex);
             return false;
         }
     }
@@ -62,11 +62,11 @@ public class FlinkYarnTaskService {
         if (yarnClient != null) {
             return;
         }
-        LOG.info("Initializing YarnClient");
+        LOGGER.info("Initializing YarnClient");
         yarnClient = YarnClient.createYarnClient();
         yarnClient.init(hadoopConf);
         yarnClient.start();
-        LOG.info("YarnClient started");
+        LOGGER.info("YarnClient started");
     }
 
     @PreDestroy
@@ -74,7 +74,7 @@ public class FlinkYarnTaskService {
         if (yarnClient == null) {
             return;
         }
-        LOG.info("Stopping YarnClient");
+        LOGGER.info("Stopping YarnClient");
         yarnClient.stop();
         yarnClient = null;
     }

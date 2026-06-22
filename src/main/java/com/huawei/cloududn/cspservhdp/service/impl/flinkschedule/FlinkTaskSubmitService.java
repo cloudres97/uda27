@@ -21,7 +21,7 @@ import java.util.List;
 @Component
 public class FlinkTaskSubmitService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FlinkTaskSubmitService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlinkTaskSubmitService.class);
 
     @Value("${flink.schedule.flink-bin:flink}")
     private String flinkBin;
@@ -35,13 +35,13 @@ public class FlinkTaskSubmitService {
     public boolean submitTask(String applicationName) {
         String taskPath = FlinkScheduleConstants.HDFS_FLINK_ROOT + "/" + applicationName + "/";
         List<String> command = buildSubmitCommand(applicationName, taskPath);
-        LOG.info("Submitting Flink task {}, command={}", applicationName, command);
+        LOGGER.info("Submitting Flink task {}, command={}", applicationName, command);
         int exitCode = executeCommand(command);
         if (exitCode == 0) {
-            LOG.info("Flink task {} submitted successfully", applicationName);
+            LOGGER.info("Flink task {} submitted successfully", applicationName);
             return true;
         }
-        LOG.error("Flink task {} submit failed, exitCode={}", applicationName, exitCode);
+        LOGGER.error("Flink task {} submit failed, exitCode={}", applicationName, exitCode);
         return false;
     }
 
@@ -72,15 +72,15 @@ public class FlinkTaskSubmitService {
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.redirectErrorStream(true);
         try {
-            LOG.debug("Starting process: {}", command);
+            LOGGER.debug("Starting process: {}", command);
             Process process = processBuilder.start();
             logProcessOutput(process);
             int exitCode = process.waitFor();
-            LOG.debug("Process finished, exitCode={}", exitCode);
+            LOGGER.debug("Process finished, exitCode={}", exitCode);
             return exitCode;
         } catch (IOException | InterruptedException ex) {
             Thread.currentThread().interrupt();
-            LOG.error("Failed to execute command {}", command, ex);
+            LOGGER.error("Failed to execute command {}", command, ex);
             return -1;
         }
     }
@@ -90,7 +90,7 @@ public class FlinkTaskSubmitService {
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                LOG.info("Flink submit output: {}", line);
+                LOGGER.info("Flink submit output: {}", line);
             }
         }
     }

@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Service
 public class FlinkScheduleUDA {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FlinkScheduleUDA.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlinkScheduleUDA.class);
 
     private final FlinkHdfsMetaService hdfsMetaService;
 
@@ -62,16 +62,16 @@ public class FlinkScheduleUDA {
      */
     @PostConstruct
     public void init() {
-        LOG.info("FlinkScheduleUDA initializing");
+        LOGGER.info("FlinkScheduleUDA initializing");
         hdfsAvailable = hdfsMetaService.probeConnection();
         if (!hdfsAvailable) {
-            LOG.warn("HDFS unavailable at startup, skip initial Flink task check and upload");
+            LOGGER.warn("HDFS unavailable at startup, skip initial Flink task check and upload");
             return;
         }
         yarnTaskService.initYarnClient();
         hdfsMetaService.uploadAllLocalMeta();
         checkAndRecoverAllFlinkTasks();
-        LOG.info("FlinkScheduleUDA initialization completed");
+        LOGGER.info("FlinkScheduleUDA initialization completed");
     }
 
     /**
@@ -80,9 +80,9 @@ public class FlinkScheduleUDA {
      */
     @Scheduled(cron = "${flink.schedule.upload-cron:0 */5 * * * ?}")
     public void scheduledUploadLocalMeta() {
-        LOG.info("Scheduled local meta upload triggered");
+        LOGGER.info("Scheduled local meta upload triggered");
         if (!ensureHdfsReady()) {
-            LOG.warn("Skip scheduled upload because HDFS is unavailable");
+            LOGGER.warn("Skip scheduled upload because HDFS is unavailable");
             return;
         }
         hdfsMetaService.uploadAllLocalMeta();
@@ -94,9 +94,9 @@ public class FlinkScheduleUDA {
      */
     @Scheduled(fixedDelayString = "${flink.schedule.check-interval-ms:60000}")
     public void scheduledCheckFlinkTasks() {
-        LOG.debug("Scheduled Flink task health check triggered");
+        LOGGER.debug("Scheduled Flink task health check triggered");
         if (!ensureHdfsReady()) {
-            LOG.warn("Skip scheduled health check because HDFS is unavailable");
+            LOGGER.warn("Skip scheduled health check because HDFS is unavailable");
             return;
         }
         checkAndRecoverAllFlinkTasks();
@@ -111,10 +111,10 @@ public class FlinkScheduleUDA {
         if (hdfsAvailable) {
             return true;
         }
-        LOG.info("HDFS was unavailable, retrying connection probe");
+        LOGGER.info("HDFS was unavailable, retrying connection probe");
         hdfsAvailable = hdfsMetaService.probeConnection();
         if (hdfsAvailable) {
-            LOG.info("HDFS connection recovered");
+            LOGGER.info("HDFS connection recovered");
             yarnTaskService.initYarnClient();
         }
         return hdfsAvailable;
@@ -124,17 +124,17 @@ public class FlinkScheduleUDA {
      * 扫描 HDFS 上所有 application 并逐一检查、恢复。
      */
     private void checkAndRecoverAllFlinkTasks() {
-        LOG.info("Start checking all Flink tasks under {}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
+        LOGGER.info("Start checking all Flink tasks under {}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
         List<String> applicationNames = hdfsMetaService.listApplicationNames();
         if (applicationNames.isEmpty()) {
-            LOG.info("No Flink application found under {}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
+            LOGGER.info("No Flink application found under {}", FlinkScheduleConstants.HDFS_FLINK_ROOT);
             return;
         }
-        LOG.info("Checking {} Flink application(s): {}", applicationNames.size(), applicationNames);
+        LOGGER.info("Checking {} Flink application(s): {}", applicationNames.size(), applicationNames);
         for (String applicationName : applicationNames) {
             ensureFlinkTaskRunning(applicationName);
         }
-        LOG.info("Flink task health check finished");
+        LOGGER.info("Flink task health check finished");
     }
 
     /**
@@ -149,16 +149,16 @@ public class FlinkScheduleUDA {
     private void ensureFlinkTaskRunning(String applicationName) {
         Lock lock = applicationLocks.computeIfAbsent(applicationName, key -> new ReentrantLock());
         if (!lock.tryLock()) {
-            LOG.info("Another thread is handling application {}, skip this round", applicationName);
+            LOGGER.info("Another thread is handling application {}, skip this round", applicationName);
             return;
         }
         try {
-            LOG.debug("Checking Flink task status for application={}", applicationName);
+            LOGGER.debug("Checking Flink task status for application={}", applicationName);
             if (yarnTaskService.isTaskActive(applicationName)) {
-                LOG.debug("Flink task {} is starting or running, no action needed", applicationName);
+                LOGGER.debug("Flink task {} is starting or running, no action needed", applicationName);
                 return;
             }
-            LOG.warn("Flink task {} is not active, preparing to submit", applicationName);
+            LOGGER.warn("Flink task {} is not active, preparing to submit", applicationName);
             taskSubmitService.submitTask(applicationName);
         } finally {
             lock.unlock();
