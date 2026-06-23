@@ -39,6 +39,8 @@ public class FlinkScheduleUDA {
 
     private final FlinkTaskSubmitService taskSubmitService;
 
+    private final FlinkModelPathHolder modelPathHolder;
+
     /** 按 applicationName 维度的提交锁，防止并发重复提交同一任务。 */
     private final Map<String, Lock> applicationLocks = new ConcurrentHashMap<>();
 
@@ -48,10 +50,12 @@ public class FlinkScheduleUDA {
     @Autowired
     public FlinkScheduleUDA(FlinkHdfsMetaService hdfsMetaService,
                             FlinkYarnTaskService yarnTaskService,
-                            FlinkTaskSubmitService taskSubmitService) {
+                            FlinkTaskSubmitService taskSubmitService,
+                            FlinkModelPathHolder modelPathHolder) {
         this.hdfsMetaService = hdfsMetaService;
         this.yarnTaskService = yarnTaskService;
         this.taskSubmitService = taskSubmitService;
+        this.modelPathHolder = modelPathHolder;
     }
 
     /**
@@ -72,6 +76,25 @@ public class FlinkScheduleUDA {
         hdfsMetaService.uploadAllLocalMeta();
         checkAndRecoverAllFlinkTasks();
         LOGGER.info("FlinkScheduleUDA initialization completed");
+    }
+
+    /**
+     * 元模型路径变更回调，由外部监听注册后调用。
+     * <p>
+     * 更新全局 {@link FlinkModelPathHolder} 中的 modelPath，
+     * 并在 HDFS 可用时立即触发一次本地 meta 上传。
+     * </p>
+     *
+     * @param modelPath 新的模型根路径
+     */
+    public void onMetaModelChangedEvent(String modelPath) {
+        LOGGER.info("Received meta model changed event, modelPath={}", modelPath);
+        modelPathHolder.updateModelPath(modelPath);
+        if (!ensureHdfsReady()) {
+            LOGGER.warn("Skip meta upload after model path change because HDFS is unavailable");
+            return;
+        }
+        hdfsMetaService.uploadAllLocalMeta();
     }
 
     /**

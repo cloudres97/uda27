@@ -31,12 +31,12 @@ public class FlinkHdfsMetaServiceTest {
 
     @Before
     public void setUp() {
-        hdfsMetaService = new FlinkHdfsMetaService();
+        hdfsMetaService = new FlinkHdfsMetaService(new FlinkModelPathHolder());
     }
 
     @Test
     public void uploadAllLocalMeta_shouldSkipWhenLocalRootNotExists() {
-        FlinkHdfsMetaService service = new FlinkHdfsMetaService() {
+        FlinkHdfsMetaService service = new FlinkHdfsMetaService(new FlinkModelPathHolder()) {
             @Override
             public void uploadApplicationMeta(File applicationDir) {
                 throw new AssertionError("Should not upload when local root missing");
@@ -82,7 +82,7 @@ public class FlinkHdfsMetaServiceTest {
 
     @Test
     public void listApplicationNames_shouldReturnEmptyWhenHdfsUnavailable() {
-        FlinkHdfsMetaService service = new FlinkHdfsMetaService() {
+        FlinkHdfsMetaService service = new FlinkHdfsMetaService(new FlinkModelPathHolder()) {
             @Override
             org.apache.hadoop.fs.FileSystem createFileSystem() throws IOException {
                 throw new IOException("HDFS down");
@@ -95,7 +95,7 @@ public class FlinkHdfsMetaServiceTest {
 
     @Test
     public void probeConnection_shouldReturnFalseWhenHdfsUnavailable() {
-        FlinkHdfsMetaService service = new FlinkHdfsMetaService() {
+        FlinkHdfsMetaService service = new FlinkHdfsMetaService(new FlinkModelPathHolder()) {
             @Override
             org.apache.hadoop.fs.FileSystem createFileSystem() throws IOException {
                 throw new IOException("HDFS down");
@@ -113,6 +113,7 @@ public class FlinkHdfsMetaServiceTest {
         private final String localRootPath;
 
         TestableHdfsMetaService(String localRootPath) {
+            super(new FlinkModelPathHolder());
             this.localRootPath = localRootPath;
         }
 

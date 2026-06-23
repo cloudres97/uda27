@@ -9,6 +9,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,9 +31,13 @@ public class FlinkScheduleUDATest {
 
     private FlinkScheduleUDA flinkScheduleUDA;
 
+    private FlinkModelPathHolder modelPathHolder;
+
     @Before
     public void setUp() {
-        flinkScheduleUDA = new FlinkScheduleUDA(hdfsMetaService, yarnTaskService, taskSubmitService);
+        modelPathHolder = new FlinkModelPathHolder();
+        flinkScheduleUDA = new FlinkScheduleUDA(
+                hdfsMetaService, yarnTaskService, taskSubmitService, modelPathHolder);
     }
 
     @Test
@@ -111,5 +116,25 @@ public class FlinkScheduleUDATest {
         flinkScheduleUDA.scheduledCheckFlinkTasks();
 
         verify(taskSubmitService, org.mockito.Mockito.times(2)).submitTask("user-event");
+    }
+
+    @Test
+    public void onMetaModelChangedEvent_shouldUpdateModelPathAndUploadWhenHdfsAvailable() {
+        when(hdfsMetaService.probeConnection()).thenReturn(true);
+
+        flinkScheduleUDA.onMetaModelChangedEvent("/data/new-model");
+
+        assertEquals("/data/new-model/", modelPathHolder.getModelPath());
+        verify(hdfsMetaService).uploadAllLocalMeta();
+    }
+
+    @Test
+    public void onMetaModelChangedEvent_shouldSkipUploadWhenHdfsUnavailable() {
+        when(hdfsMetaService.probeConnection()).thenReturn(false);
+
+        flinkScheduleUDA.onMetaModelChangedEvent("/data/new-model");
+
+        assertEquals("/data/new-model/", modelPathHolder.getModelPath());
+        verify(hdfsMetaService, never()).uploadAllLocalMeta();
     }
 }

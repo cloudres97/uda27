@@ -29,6 +29,12 @@ public class FlinkHdfsMetaService {
 
     private final Configuration hadoopConf = new Configuration();
 
+    private final FlinkModelPathHolder modelPathHolder;
+
+    public FlinkHdfsMetaService(FlinkModelPathHolder modelPathHolder) {
+        this.modelPathHolder = modelPathHolder;
+    }
+
     /**
      * 探测 HDFS 是否可用。
      *
@@ -76,16 +82,16 @@ public class FlinkHdfsMetaService {
      * 将本地 meta 根目录下所有 application 子目录同步到 HDFS。
      */
     public void uploadAllLocalMeta() {
-        LOGGER.info("Start uploading local meta from {}", FlinkScheduleConstants.LOCAL_META_DIR);
-        File localRoot = new File(FlinkScheduleConstants.LOCAL_META_DIR);
+        String localMetaDir = modelPathHolder.getLocalMetaDir();
+        LOGGER.info("Start uploading local meta from {}", localMetaDir);
+        File localRoot = new File(localMetaDir);
         if (!localRoot.isDirectory()) {
-            LOGGER.warn("Local meta directory not found or not a directory: {}",
-                    FlinkScheduleConstants.LOCAL_META_DIR);
+            LOGGER.warn("Local meta directory not found or not a directory: {}", localMetaDir);
             return;
         }
         File[] applicationDirs = localRoot.listFiles(File::isDirectory);
         if (applicationDirs == null || applicationDirs.length == 0) {
-            LOGGER.info("No application meta subdirectory under {}", FlinkScheduleConstants.LOCAL_META_DIR);
+            LOGGER.info("No application meta subdirectory under {}", localMetaDir);
             return;
         }
         LOGGER.info("Found {} local application meta director(ies) to upload", applicationDirs.length);
