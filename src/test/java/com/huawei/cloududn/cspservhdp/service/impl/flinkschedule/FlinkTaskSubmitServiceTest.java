@@ -25,28 +25,32 @@ public class FlinkTaskSubmitServiceTest {
     @Test
     public void buildSubmitCommand_shouldContainAllRequiredArguments() {
         List<String> command = submitService.buildSubmitCommand(
+                "order-sync",
                 "hdfs://hacluster/uda/plugin/flink/order-sync/");
 
         assertEquals("/opt/Bigdata/Flink/flink/bin/flink", command.get(0));
         assertEquals("run-application", command.get(1));
         assertEquals("-t", command.get(2));
         assertEquals("yarn-application", command.get(3));
-        assertEquals("-c", command.get(4));
-        assertEquals(FlinkScheduleConstants.FLINK_MAIN_CLASS, command.get(5));
-        assertEquals("-Dyarn.ship-files=" + FlinkScheduleConstants.FLINK_YARN_SHIP_FILES, command.get(6));
-        assertEquals("-Denv.java.opts=" + FlinkScheduleConstants.FLINK_ENV_JAVA_OPTS, command.get(7));
+        assertEquals("-Dyarn.application.name=order-sync", command.get(4));
+        assertEquals("-c", command.get(5));
+        assertEquals(FlinkScheduleConstants.FLINK_MAIN_CLASS, command.get(6));
+        assertEquals("-Dyarn.ship-files=" + FlinkScheduleConstants.FLINK_YARN_SHIP_FILES, command.get(7));
+        assertEquals("-Denv.java.opts=" + FlinkScheduleConstants.FLINK_ENV_JAVA_OPTS, command.get(8));
         assertEquals("-Dsecurity.kerberos.login.contexts="
-                + FlinkScheduleConstants.FLINK_KERBEROS_LOGIN_CONTEXTS, command.get(8));
-        assertEquals(FlinkScheduleConstants.FLINK_JAR_PATH, command.get(9));
-        assertEquals("--task-path", command.get(10));
-        assertEquals("hdfs://hacluster/uda/plugin/flink/order-sync/", command.get(11));
+                + FlinkScheduleConstants.FLINK_KERBEROS_LOGIN_CONTEXTS, command.get(9));
+        assertEquals(FlinkScheduleConstants.FLINK_JAR_PATH, command.get(10));
+        assertEquals("--task-path", command.get(11));
+        assertEquals("hdfs://hacluster/uda/plugin/flink/order-sync/", command.get(12));
     }
 
     @Test
-    public void buildSubmitCommand_shouldUseTaskPath() {
+    public void buildSubmitCommand_shouldUseApplicationNameAndTaskPath() {
         List<String> command = submitService.buildSubmitCommand(
+                "user-event",
                 "hdfs://hacluster/uda/plugin/flink/user-event/");
 
+        assertTrue(command.contains("-Dyarn.application.name=user-event"));
         assertTrue(command.contains("hdfs://hacluster/uda/plugin/flink/user-event/"));
     }
 

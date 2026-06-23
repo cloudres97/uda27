@@ -34,7 +34,7 @@ public class FlinkTaskSubmitService {
      */
     public boolean submitTask(String applicationName) {
         String taskPath = FlinkScheduleConstants.HDFS_FLINK_ROOT + "/" + applicationName + "/";
-        List<String> command = buildSubmitCommand(taskPath);
+        List<String> command = buildSubmitCommand(applicationName, taskPath);
         LOGGER.info("Submitting Flink task {}, command={}", applicationName, command);
         int exitCode = executeCommand(command);
         if (exitCode == 0) {
@@ -48,15 +48,17 @@ public class FlinkTaskSubmitService {
     /**
      * 拼装 flink run-application 提交命令。
      *
-     * @param taskPath HDFS 任务路径
+     * @param applicationName 应用名称，与 HDFS 子目录名及 YARN application name 一致
+     * @param taskPath        HDFS 任务路径
      * @return 命令参数列表
      */
-    List<String> buildSubmitCommand(String taskPath) {
+    List<String> buildSubmitCommand(String applicationName, String taskPath) {
         List<String> command = new ArrayList<>();
         command.add(flinkBin);
         command.add("run-application");
         command.add("-t");
         command.add("yarn-application");
+        command.add("-Dyarn.application.name=" + applicationName);
         command.add("-c");
         command.add(FlinkScheduleConstants.FLINK_MAIN_CLASS);
         command.add("-Dyarn.ship-files=" + FlinkScheduleConstants.FLINK_YARN_SHIP_FILES);
